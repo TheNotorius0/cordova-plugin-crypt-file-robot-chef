@@ -1,6 +1,6 @@
 # Notorious changes:
 - Fix on iOS that it can't encrypt, by skipping on iOS
-- plugin.xml crypt files relevant for Azmar (my game)
+- plugin.xml crypt files relevant for Robot Chef (my cooking app using AI)
 
 # Cordova crypt file plugin
 HTML source file is encrypted at build, and decrypted at run.  
