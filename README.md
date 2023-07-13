@@ -1,3 +1,7 @@
+# Notorious changes:
+- Fix on iOS that it can't encrypt, by skipping on iOS
+- plugin.xml crypt files relevant for Azmar (my game)
+
 # Cordova crypt file plugin
 HTML source file is encrypted at build, and decrypted at run.  
 https://www.npmjs.com/package/cordova-plugin-crypt-file
