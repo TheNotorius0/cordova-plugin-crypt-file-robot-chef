@@ -20,49 +20,55 @@ module.exports = function(context) {
     context.opts.platforms.filter(function(platform) {
         var pluginInfo = context.opts.plugin.pluginInfo;
         return pluginInfo.getPlatformsArray().indexOf(platform) > -1;
-        
+
     }).forEach(function(platform) {
-        var platformPath = path.join(projectRoot, 'platforms', platform);
-        var platformApi = platforms.getPlatformApi(platform, platformPath);
-        var platformInfo = platformApi.getPlatformInfo();
-        var wwwDir = platformInfo.locations.www;
 
-        findCryptFiles(wwwDir).filter(function(file) {
-            return fs.statSync(file).isFile() && isCryptFile(file.replace(wwwDir, ''));
-        }).forEach(function(file) {
-            var content = fs.readFileSync(file, 'utf-8');
-            fs.writeFileSync(file, encryptData(content, key, iv), 'utf-8');
-            console.log('encrypt: ' + file);
-        });
+        if (platform == 'android') { // Manually added this line
 
-        if (platform == 'ios') {
-            var pluginDir;
-            try {
-              var ios_parser = context.requireCordovaModule('cordova-lib/src/cordova/metadata/ios_parser'),
-                  iosParser = new ios_parser(platformPath);
-              pluginDir = path.join(iosParser.cordovaproj, 'Plugins', context.opts.plugin.id);
-            } catch (err) {
-              var xcodeproj_dir = fs.readdirSync(platformPath).filter(function(e) { return e.match(/\.xcodeproj$/i); })[0],
-                  xcodeproj = path.join(platformPath, xcodeproj_dir),
-                  originalName = xcodeproj.substring(xcodeproj.lastIndexOf(path.sep)+1, xcodeproj.indexOf('.xcodeproj')),
-                  cordovaproj = path.join(platformPath, originalName);
+            var platformPath = path.join(projectRoot, 'platforms', platform);
+            var platformApi = platforms.getPlatformApi(platform, platformPath);
+            var platformInfo = platformApi.getPlatformInfo();
+            var wwwDir = platformInfo.locations.www;
 
-              pluginDir = path.join(cordovaproj, 'Plugins', context.opts.plugin.id);
-            }
-            replaceCryptKey_ios(pluginDir, key, iv);
-
-        } else if (platform == 'android') {
-            var pluginDir = path.join(platformPath, 'app/src/main/java');
-            replaceCryptKey_android(pluginDir, key, iv);
-
-            var cfg = new ConfigParser(platformInfo.projectConfig.path);
-            cfg.doc.getroot().getchildren().filter(function(child, idx, arr) {
-                return (child.tag == 'content');
-            }).forEach(function(child) {
-                child.attrib.src = '/+++/' + child.attrib.src;
+            findCryptFiles(wwwDir).filter(function (file) {
+                return fs.statSync(file).isFile() && isCryptFile(file.replace(wwwDir, ''));
+            }).forEach(function (file) {
+                var content = fs.readFileSync(file, 'utf-8');
+                fs.writeFileSync(file, encryptData(content, key, iv), 'utf-8');
+                console.log('encrypt: ' + file);
             });
 
-            cfg.write();
+            if (platform == 'ios') {
+                var pluginDir;
+                try {
+                    var ios_parser = context.requireCordovaModule('cordova-lib/src/cordova/metadata/ios_parser'),
+                        iosParser = new ios_parser(platformPath);
+                    pluginDir = path.join(iosParser.cordovaproj, 'Plugins', context.opts.plugin.id);
+                } catch (err) {
+                    var xcodeproj_dir = fs.readdirSync(platformPath).filter(function (e) {
+                            return e.match(/\.xcodeproj$/i);
+                        })[0],
+                        xcodeproj = path.join(platformPath, xcodeproj_dir),
+                        originalName = xcodeproj.substring(xcodeproj.lastIndexOf(path.sep) + 1, xcodeproj.indexOf('.xcodeproj')),
+                        cordovaproj = path.join(platformPath, originalName);
+
+                    pluginDir = path.join(cordovaproj, 'Plugins', context.opts.plugin.id);
+                }
+                replaceCryptKey_ios(pluginDir, key, iv);
+
+            } else if (platform == 'android') {
+                var pluginDir = path.join(platformPath, 'app/src/main/java');
+                replaceCryptKey_android(pluginDir, key, iv);
+
+                var cfg = new ConfigParser(platformInfo.projectConfig.path);
+                cfg.doc.getroot().getchildren().filter(function (child, idx, arr) {
+                    return (child.tag == 'content');
+                }).forEach(function (child) {
+                    child.attrib.src = '/+++/' + child.attrib.src;
+                });
+
+                cfg.write();
+            }
         }
     });
 
